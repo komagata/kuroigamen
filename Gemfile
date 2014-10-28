@@ -1,6 +1,5 @@
 source :rubygems
 
-gem 'bundler', '~> 1.0.7'
 gem 'rack', '1.3.5'
 gem 'rack-flash', '0.1.1'
 gem 'i18n', '0.5.0'
@@ -35,25 +34,15 @@ gem 'yard-sinatra'
 Dir["public/plugin/lokka-*/Gemfile"].each {|path| eval(open(path) {|f| f.read }) }
 
 group :production do
+  gem 'dm-postgres-adapter', '1.2.0'
 end
 
 group :development do
+  gem 'dm-sqlite-adapter', '1.2.0'
 end
 
 group :test do
   gem 'rack-test', '0.6.1', :require => 'rack/test'
   gem 'rspec', '~> 2.5'
   gem 'simplecov', :require => false if RUBY_VERSION >= '1.9'
-end
-
-group :mysql do
-  gem 'dm-mysql-adapter', '1.2.0.rc2'
-end
-
-group :postgresql do
-  gem 'dm-postgres-adapter', '1.2.0.rc2'
-end
-
-group :sqlite do
-  gem 'dm-sqlite-adapter', '1.2.0.rc2'
 end
