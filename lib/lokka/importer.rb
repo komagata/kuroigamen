@@ -1,6 +1,8 @@
 module Lokka
   module Importer
     class WordPress
+      DEFAULT_PASSWORD = 'test'
+
       def initialize(file)
         @file = file
       end
@@ -9,17 +11,27 @@ module Lokka
         doc = Nokogiri::XML(@file.read.gsub(//, ''))
         doc.xpath('/rss/channel',
         'content' => 'http://purl.org/rss/1.0/modules/content/',
-        'wp' => 'http://wordpress.org/export/1.1/').each do |channel|
+        'wp' => 'http://wordpress.org/export/1.1/',
+        'dc' => 'http://purl.org/dc/elements/1.1/').each do |channel|
           Site.first.update(
             :title => channel.xpath('title').text,
             :description => channel.xpath('description').text
           )
 
           channel.xpath('wp:author').each do |author|
-            User.first_or_create(
-              :name  => author.xpath('wp:author_login').text,
-              :email => author.xpath('wp:author_email').text
-            )
+            name = author.xpath('wp:author_login').text
+            user = User.first(:name => name)
+
+            unless user
+              user = User.new(
+                :name                  => name,
+                :password              => DEFAULT_PASSWORD,
+                :password_confirmation => DEFAULT_PASSWORD
+              )
+            end
+
+            user.email = author.xpath('wp:author_email').text
+            user.save
           end
 
           channel.xpath('wp:category').each do |category|
@@ -48,6 +60,7 @@ module Lokka
               :title => item.xpath('title').text,
               :body  => item.xpath('content:encoded').text,
               :draft => item.xpath('wp:status').text == 'publish' ? false : true,
+              :slug  => item.xpath('wp:post_name').text,
               :created_at => Time.parse(item.xpath('wp:post_date_gmt').text),
               :updated_at => Time.parse(item.xpath('wp:post_date_gmt').text)
             }
@@ -58,10 +71,18 @@ module Lokka
               entry = model.create(attrs)
             end
 
+            # author
+            item.xpath('dc:creator').each do |creator|
+              entry.user = User.first(:name => creator.text)
+              break
+            end
+
+            # tag
             item.xpath("category[@domain='post_tag']").each do |tag|
               entry.tag_list << tag.text
             end
 
+            # category
             item.xpath("category[@domain='category']").each do |category|
               if category = Category.first(:title => category.text)
                 entry.category = category
@@ -70,8 +91,8 @@ module Lokka
 
             entry.save
 
+            # comment
             entry.comments.destroy
-
             item.xpath('wp:comment').each do |comment|
               comment = entry.comments.new(
                 :name => comment.xpath('wp:comment_author').text,

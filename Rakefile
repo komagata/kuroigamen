@@ -2,7 +2,7 @@ require './init'
 require 'yard'
 include Rake::DSL if defined? Rake::DSL
 
-task :default => ['spec:setup', 'db:delete', 'db:spec_seed', :spec]
+task :default => ['spec:setup', 'db:delete', :spec]
 
 desc 'Migrate the Lokka database'
 task 'db:migrate' do
@@ -27,7 +27,7 @@ end
 desc 'Reset database'
 task 'db:reset' => %w(db:delete db:seed)
 
-desc 'Set database'
+desc 'Set up database'
 task 'db:setup' => %w(db:migrate db:seed)
 
 desc 'Install gems'
@@ -48,18 +48,10 @@ task 'spec:setup' do
   ENV['RACK_ENV'] = ENV['LOKKA_ENV'] = 'test'
 end
 
-desc 'Execute spec seed script'
-task 'db:spec_seed' do
-  DataMapper::Logger.new(STDOUT, :debug)
-  DataMapper.logger.set_log STDERR, :debug, "SQL: ", true
-  Lokka::Database.new.connect
-  load File.join(Lokka.root, 'db', 'spec_seeds.rb')
-end
-
 begin
   require 'rspec/core/rake_task'
   RSpec::Core::RakeTask.new(:spec => 'spec:setup') do |spec|
-    spec.pattern = 'spec/*_spec.rb'
+    spec.pattern = 'spec/**/*_spec.rb'
     spec.rspec_opts = ['-cfs']
   end
 rescue LoadError => e

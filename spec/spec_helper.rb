@@ -1,11 +1,3 @@
-# encoding: utf-8
-require File.join(File.dirname(__FILE__), '..', 'init.rb')
-
-require 'rubygems'
-require 'sinatra'
-require 'rack/test'
-require 'rspec'
-
 if RUBY_VERSION >= '1.9'
 
   require 'simplecov'
@@ -21,6 +13,20 @@ if RUBY_VERSION >= '1.9'
   end
 end
 
+require File.join(File.dirname(__FILE__), '..', 'init.rb')
+
+require 'rubygems'
+require 'sinatra'
+require 'rack/test'
+require 'rspec'
+require 'factory_girl'
+require 'database_cleaner'
+
+require 'factories'
+require "dm-core"
+require "dm-transactions"
+
+
 set :environment, :test
 Lokka::Database.new.connect
 
@@ -35,4 +41,18 @@ RSpec.configure do |config|
   config.include Rack::Test::Methods
   config.include LokkaTestMethods
   config.include Lokka::Helpers
+
+  config.include FactoryGirl::Syntax::Methods
+
+  config.before(:suite) do
+    DatabaseCleaner.strategy = :transaction
+  end
+
+  config.before(:each) do
+    DatabaseCleaner.start
+  end
+
+  config.after(:each) do
+    DatabaseCleaner.clean
+  end
 end

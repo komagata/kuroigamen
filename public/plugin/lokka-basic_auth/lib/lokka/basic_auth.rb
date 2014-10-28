@@ -5,7 +5,7 @@ module Lokka
         return if path =~ %r{^/admin/.*$}
         username = Option.basic_auth_username
         password = Option.basic_auth_password
-        if username and password
+        if username.present? and password.present?
           @auth ||=  Rack::Auth::Basic::Request.new(request.env)
           unless @auth.provided? && @auth.basic? &&
           @auth.credentials && @auth.credentials == [username, password]
@@ -23,7 +23,7 @@ module Lokka
         Option.basic_auth_username = params['basic_auth_username']
         Option.basic_auth_password = params['basic_auth_password']
         flash[:notice] = 'Updated.'
-        redirect '/admin/plugins/basic_auth'
+        redirect to('/admin/plugins/basic_auth')
       end
     end
   end

@@ -1,6 +1,2 @@
 %h2= t("new_#{@name}")
-%form(action="/admin/#{@name.pluralize}" method="post")
-  = partial 'entries/form'
-  %p
-    %input(type="submit" value="#{t('preview')}" name="preview")
-    %input(type="submit" value="#{t('new')}" name="edit")
+= haml :'admin/entries/form', :layout => false, :locals => {:action => url("/admin/#{@name.pluralize}"), :method => 'post', :label => t('new')}
