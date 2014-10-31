@@ -9,7 +9,7 @@ module Lokka
         params.each_pair do |key, value|
           eval("Option.#{key}='#{value}'")
         end 
-        flash[:notice] = t.gravatar_image_updated
+        flash[:notice] = t('gravatar_image_updated')
         redirect '/admin/plugins/gravatar_image'
       end
     end
